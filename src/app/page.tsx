@@ -1,93 +1,91 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Todo } from "@/types/todo";
-import TodoInput from "@/components/TodoInput";
-import TodoList from "@/components/TodoList";
+import { useState } from 'react';
 
-export default function Home() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+type Task = {
+  text: string;
+  completed: boolean;
+};
 
-  const addTodo = (text: string) => {
-    if (text.trim() === "") return;
+export default function Page() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [inputValue, setInputValue] = useState('');
 
-    setTodos((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        text: text.trim(),
-        completed: false,
-      },
-    ]);
+  const addTask = () => {
+    if (inputValue.trim() === '') return;
+    setTasks([...tasks, { text: inputValue.trim(), completed: false }]);
+    setInputValue('');
   };
 
-  const toggleTodo = (id: number) => {
-    setTodos((prev) =>
-      prev.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
+  const toggleTask = (index: number) => {
+    const updated = [...tasks];
+    updated[index].completed = !updated[index].completed;
+    setTasks(updated);
   };
 
-  const deleteTodo = (id: number) => {
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  const deleteTask = (index: number) => {
+    setTasks(tasks.filter((_, i) => i !== index));
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-md mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-black text-center">
-            TODOアプリ
-          </h1>
+    <main className="min-h-screen bg-gray-100 py-12 px-4">
+      <div className="max-w-xl mx-auto">
+        {/* タイトルとサブタイトル */}
+        <h1 className="text-3xl font-bold text-center mb-2">TODOアプリ</h1>
+        <p className="text-center text-base mb-8">タスクの管理と整理を簡単に</p>
+
+        {/* カード部分 */}
+        <div className="bg-white rounded-xl shadow p-6 space-y-4">
+          {/* 入力欄 */}
+          <div className="flex items-center border-b pb-4">
+            <div className="w-5 h-5 border-2 border-gray-300 rounded-full mr-2" />
+            <input
+              type="text"
+              placeholder="新しいリマインダー"
+              className="flex-1 border-none outline-none text-gray-500 placeholder-gray-400"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addTask()}
+            />
+          </div>
+
+          {/* タスクリスト */}
+          {tasks.length === 0 ? (
+            <div className="text-center text-gray-400">リマインダーがありません</div>
+          ) : (
+            <ul className="space-y-2">
+              {tasks.map((task, idx) => (
+                <li key={idx} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {/* ✅ チェック丸（開閉タグ） */}
+                    <div
+                      onClick={() => toggleTask(idx)}
+                      className={`w-5 h-5 rounded-full border-2 cursor-pointer ${
+                        task.completed
+                          ? 'bg-red-500 border-red-500'
+                          : 'border-gray-400'
+                      }`}
+                    ></div>
+                    <span
+                      className={`${
+                        task.completed ? 'text-red-500' : ''
+                      }`}
+                    >
+                      {task.text}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => deleteTask(idx)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    🗑️
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
-
-      <div className="max-w-md mx-auto bg-white mt-8 rounded-xl shadow-sm overflow-hidden">
-        <TodoInput onAddTodo={addTodo} />
-        <TodoList
-          todos={todos}
-          onToggleTodo={toggleTodo}
-          onDeleteTodo={deleteTodo}
-        />
-      </div>
-
-      <div className="h-20"></div>
-    </div>
+    </main>
   );
 }
-
-/**
- * リマインダーアプリのメインページコンポーネント：
- *
- * 1. 状態管理（useState）
- *    - todos: TODOリストの全てのアイテムを保存
- *    - 状態が変更されると自動的にUIが再レンダリングされる
- *    - Todo型の配列として管理
- *
- * 2. CRUD操作（Create, Read, Update, Delete）
- *    - addTodo: 新しいタスクを追加（Create）
- *    - todos配列: タスクの表示（Read）
- *    - toggleTodo: 完了状態の切り替え（Update）
- *    - deleteTodo: タスクの削除（Delete）
- *
- * 3. 関数型プログラミングの活用
- *    - map(): 配列の各要素を変換（toggleTodo内で使用）
- *    - filter(): 条件に合う要素のみ抽出（deleteTodo内で使用）
- *    - スプレッド演算子(...): 既存配列に新要素追加
- *
- * 4. コンポーネント設計
- *    - TodoInput: 新規タスク入力フォーム
- *    - TodoList: タスクリストの表示と操作
- *    - 各コンポーネントが明確な役割を持つ
- *
- * 5. プロップス（Props）による連携
- *    - 親（このコンポーネント）が状態とロジックを管理
- *    - 子コンポーネントにはデータと関数を渡す
- *    - 一方向データフロー（親→子）でデータが流れる
- *
- * 6. TailwindCSSによるスタイリング
- *    - レスポンシブデザイン（max-w-md mx-auto）
- *    - シンプルで美しいUI
- *    - モバイルファーストアプローチ
- */
